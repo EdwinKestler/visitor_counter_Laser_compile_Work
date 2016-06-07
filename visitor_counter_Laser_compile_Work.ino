@@ -9,7 +9,7 @@ int PersonsCountedin;
 int PersonsCountedout;
 
 String ISO8601;
-int IDModulo = 949567;
+String IDModulo ;
 byte data2;
 String ATComRsp;
 
@@ -74,6 +74,7 @@ void setup() {
   BringUpGPRS();
   GetIPAddress();
   GetIMEI();
+  ISO8601 = GetTime ();
   Serial.println(F("GSM Ready"));
 }
 
@@ -94,10 +95,11 @@ void GetIMEI () {
   int secondindex = result.indexOf('|', firstindex + 1);
   String command = result.substring(0, firstindex);
   String imei = result.substring(firstindex + 1, secondindex);
-  IDModulo = imei.toInt();
+  IDModulo = imei;
   Serial.println(IDModulo);
   delay(1000);
 }
+
 String GPRScommnad (String comm) {
   GSMSrl.listen();
   String ATComRsp, response;
@@ -166,32 +168,33 @@ void loop() {
   InorOut ();
 
   if (Starttime >= nextsendtime) {
-    char bufS[32];
-    char bufE[32];
+    
+    ISO8601 = GetTime ();
+    //   char bufS[32];
+    //   char bufE[32];
     //Serial.print(F("     persons in :  "));
     // Serial.print(PersonsCountedin);
     //Serial.print(F("     persons out: "));
     //Serial.println(PersonsCountedout);
-    sprintf(bufS, "CB%dS", IDModulo);
-    sprintf(bufE, "CB%dE", IDModulo);
+    //sprintf(bufS, "CB%dS", IDModulo);
+    //sprintf(bufE, "CB%dE", IDModulo);
     //Serial.println(bufS);
-    String NodeIDSalida = bufS;
+    //  String NodeIDSalida = bufS;
     //Serial.print(F("NodeID Salida"));
     //Serial.println(NodeIDSalida);
-    delay(500);
-    String NodeIDEntrada = bufE ;
+    //  delay(500);
+    //  String NodeIDEntrada = bufE ;
     //Serial.print(F("NodeID Entrada:"));
     //Serial.println(NodeIDEntrada);
-    delay(500);
-    ISO8601 = GetTime ();
-    buildJson(NodeIDEntrada, ISO8601, PersonsCountedout, "Salida");
+  //  delay(500);
+    buildJson(IDModulo, ISO8601, PersonsCountedout, "Salida");
     delay(2000);
-    buildJson(NodeIDSalida, ISO8601, PersonsCountedin, "Entrada");
+    buildJson(IDModulo, ISO8601, PersonsCountedin, "Entrada");
     delay(1000);
     clearSerial();
     PersonsCountedout = 0;
     PersonsCountedin = 0;
-    nextsendtime = Starttime + 5 * 6 * 1000UL;
+    nextsendtime = Starttime + 5 * 60 * 1000UL;
   }
 }
 

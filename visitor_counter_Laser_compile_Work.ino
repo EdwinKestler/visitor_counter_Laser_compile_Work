@@ -65,13 +65,47 @@ boolean isGPRSReady() {
 }
 
 void setup() {
+  delay(5000);
+  String Res;
+  
   Serial.begin(19200);
+ 
+  //iniciar puerto para transmicion de data GSM
   GSMSrl.begin(9600);
-  CheckSim800 = isGPRSReady();
+  //Encender Modem
+  Res = GPRScommnad ("AT");
+  Serial.println(Res);
+  delay(200);
+  //3.2.35 AT+CSQ Signal Quality Report
+  Res = GPRScommnad ("AT+CSQ");
+  Serial.println(Res);
+  delay(200);
+  // 7.2.1 AT+CGATT Attach or Detach from GPRS Service 
+   Res = GPRScommnad ("AT+CGATT?");
+  Serial.println (Res);
+  delay(200);
+  //7.2.10 AT+CGREG Network Registration Status
+  Res = GPRScommnad ("AT+CGREG?");
+  Serial.println (Res);
+  delay(200);
+  Res = GPRScommnad ("AT+CSTT=\"broadband.tigo.gt\",\"\",\"\"");
+  Serial.println (Res);
+  delay(200);
+  Res = GPRScommnad ("AT+CIICR");
+  Serial.println (Res);
+  delay(200);
+  Res = GPRScommnad ("AT+CIFSR");
+  Serial.println (Res);
+  delay(200);
+  Res = GPRScommnad ("AT+CLTS=1");
+  Serial.println (Res);
+  delay(200);
+  //CheckSim800 = isGPRSReady();
   delay(500);
   wakeUpModem ();
   ConnectToAPN();
   BringUpGPRS();
+  delay(5000);
   GetIPAddress();
   GetIMEI();
   ISO8601 = GetTime ();
@@ -159,6 +193,10 @@ void clearSerial() {
 unsigned long Starttime;
 unsigned long nextsendtime = 30 * 1000UL;
 
+
+
+
+
 void loop() {
   Starttime = millis();
   sensA = analogRead(A0); // READ SENSOR A
@@ -186,15 +224,15 @@ void loop() {
     //  String NodeIDEntrada = bufE ;
     //Serial.print(F("NodeID Entrada:"));
     //Serial.println(NodeIDEntrada);
-  //  delay(500);
+    delay(1000);
     buildJson(IDModulo, ISO8601, PersonsCountedout, "Salida");
-    delay(2000);
+    delay(1000);
     buildJson(IDModulo, ISO8601, PersonsCountedin, "Entrada");
     delay(1000);
     clearSerial();
     PersonsCountedout = 0;
     PersonsCountedin = 0;
-    nextsendtime = Starttime + 5 * 60 * 1000UL;
+    nextsendtime = Starttime + 1 * 60 * 1000UL;
   }
 }
 

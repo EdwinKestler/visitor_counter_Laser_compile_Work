@@ -12,7 +12,6 @@ String ISO8601;
 String IDModulo ;
 byte data2;
 String ATComRsp;
-
 char atCommand[50];
 byte mqttMessage[250];
 int mqttMessageLength = 0;
@@ -24,89 +23,52 @@ SoftwareSerial GSMSrl(7, 8); //Rx, TX Arduino --> Tx, Rx En SIM800
 //definir  parametros de conexion a red GSM
 byte GPRSserialByte;
 
-//-------- IBM Bluemix Info ---------//
-#define ORG "qnu3pg"
-#define DEVICE_TYPE "Countbox"
-#define DEVICE_ID "countbox001"
-
 //Banderas de verificacion
 boolean CheckSim800 = false;
 boolean mqttSent = false;
 
-//definir  parametros de conexion a servicio de MQtt
+//definir  parametros de conexion a servicio de MQTT
 const char* server = "iotarduinodaygt.flatbox.io";
 const char* port =  "1883";
-char* clientId = "d:" ORG ":" DEVICE_TYPE ":" DEVICE_ID;
+char* clientId = "d:qnu3pg:Countbox:countbox001";
 char * topic = "lasercount";
 char payload[250];
 
-boolean isGPRSReady() {
-  Serial.println(F("AT"));
-  GSMSrl.println(F("AT"));
-  GSMSrl.println(F("AT+CGATT?"));
-  GPRSread();
-  GSMSrl.println(F("AT+CGREG?"));
-  //GPRSread();
-  //Serial.print(F("data2:"));
-  //Serial.println(data2);
-  delay (200);
-  //Serial.println(F("Check OK"));
-  //Serial.print(F("AT command RESP:"));
-  //Serial.println(ATComRsp);
-  delay(100);
-  if (data2 > -1) {
-    Serial.println(F("GPRS OK"));
-    return true;
-  }
-  else {
-    Serial.println(F("GPRS NOT OK"));
-    return false;
-  }
-}
 
 void setup() {
-  delay(5000);
   String Res;
-  
   Serial.begin(19200);
- 
+  delay(5000);
   //iniciar puerto para transmicion de data GSM
   GSMSrl.begin(9600);
   //Encender Modem
   Res = GPRScommnad ("AT");
   Serial.println(Res);
-  delay(200);
+  delay(1000);
   //3.2.35 AT+CSQ Signal Quality Report
   Res = GPRScommnad ("AT+CSQ");
   Serial.println(Res);
-  delay(200);
+  delay(1000);
   // 7.2.1 AT+CGATT Attach or Detach from GPRS Service 
    Res = GPRScommnad ("AT+CGATT?");
   Serial.println (Res);
-  delay(200);
+  delay(1000);
   //7.2.10 AT+CGREG Network Registration Status
   Res = GPRScommnad ("AT+CGREG?");
   Serial.println (Res);
-  delay(200);
+  delay(1000);
   Res = GPRScommnad ("AT+CSTT=\"broadband.tigo.gt\",\"\",\"\"");
   Serial.println (Res);
-  delay(200);
+  delay(1000);
   Res = GPRScommnad ("AT+CIICR");
   Serial.println (Res);
-  delay(200);
+  delay(1000);
   Res = GPRScommnad ("AT+CIFSR");
   Serial.println (Res);
-  delay(200);
+  delay(1000);
   Res = GPRScommnad ("AT+CLTS=1");
   Serial.println (Res);
-  delay(200);
-  //CheckSim800 = isGPRSReady();
-  delay(500);
-  wakeUpModem ();
-  ConnectToAPN();
-  BringUpGPRS();
-  delay(5000);
-  GetIPAddress();
+  delay(1000);
   GetIMEI();
   ISO8601 = GetTime ();
   Serial.println(F("GSM Ready"));
@@ -139,7 +101,7 @@ String GPRScommnad (String comm) {
   String ATComRsp, response;
   Serial.println("command:" + comm);
   GSMSrl.println(comm);
-  delay(500);
+  delay(800);
   while (GSMSrl.available() > 0) {
     char c = GSMSrl.read();
     if (c == '\n') {
@@ -153,30 +115,7 @@ String GPRScommnad (String comm) {
   ATComRsp = "";
   GSMSrl.flush();
   Serial.flush();
-}
-
-void wakeUpModem () {
-  GSMSrl.println(F("AT")); // Sends AT command to wake up cell phone
-  //GPRSread();
-  delay(800); // Wait a second
-}
-
-void ConnectToAPN() {
-  GSMSrl.println(F("AT+CSTT=\"broadband.tigo.gt\",\"\",\"\"")); // Puts phone into GPRS mode
-  GPRSread();
-  delay(1000); // Wait a second
-}
-
-void BringUpGPRS() {
-  GSMSrl.println(F("AT+CIICR"));
-  //GPRSread();
-  delay(1000);
-}
-
-void GetIPAddress() {
-  GSMSrl.println(F("AT+CIFSR"));
-  GPRSread();
-  delay(1000);
+  
 }
 
 void clearSerial() {
@@ -193,10 +132,6 @@ void clearSerial() {
 unsigned long Starttime;
 unsigned long nextsendtime = 30 * 1000UL;
 
-
-
-
-
 void loop() {
   Starttime = millis();
   sensA = analogRead(A0); // READ SENSOR A
@@ -205,25 +140,8 @@ void loop() {
   //Serial.println(sensB);
   InorOut ();
 
-  if (Starttime >= nextsendtime) {
-    
+  if (Starttime >= nextsendtime) {    
     ISO8601 = GetTime ();
-    //   char bufS[32];
-    //   char bufE[32];
-    //Serial.print(F("     persons in :  "));
-    // Serial.print(PersonsCountedin);
-    //Serial.print(F("     persons out: "));
-    //Serial.println(PersonsCountedout);
-    //sprintf(bufS, "CB%dS", IDModulo);
-    //sprintf(bufE, "CB%dE", IDModulo);
-    //Serial.println(bufS);
-    //  String NodeIDSalida = bufS;
-    //Serial.print(F("NodeID Salida"));
-    //Serial.println(NodeIDSalida);
-    //  delay(500);
-    //  String NodeIDEntrada = bufE ;
-    //Serial.print(F("NodeID Entrada:"));
-    //Serial.println(NodeIDEntrada);
     delay(1000);
     buildJson(IDModulo, ISO8601, PersonsCountedout, "Salida");
     delay(1000);
@@ -232,7 +150,7 @@ void loop() {
     clearSerial();
     PersonsCountedout = 0;
     PersonsCountedin = 0;
-    nextsendtime = Starttime + 1 * 60 * 1000UL;
+    nextsendtime = Starttime + 5 * 60 * 1000UL;
   }
 }
 
@@ -252,7 +170,6 @@ void InorOut () {
 }
 
 void buildJson(String Sid, String tStamp, int Pcount, String InOut) {
-
   StaticJsonBuffer<500> jsonbuffer;
   JsonObject& root = jsonbuffer.createObject();
   JsonObject& d = root.createNestedObject("d");
@@ -277,7 +194,6 @@ void StablishTCPconnection () {
   strcat(atCommand, port);
   strcat(atCommand, "\"");
   GSMSrl.println(atCommand);
-  //GPRSread();
   delay(1000);
 }
 
@@ -299,6 +215,7 @@ void SendMqttConnectMesage () {
   delay(1000);
 }
 
+
 void sendMqttMessage () {
   GSMSrl.println(F("AT+CIPSEND"));
   //Serial.println(F("AT+CIPSEND"));
@@ -317,23 +234,8 @@ void sendMqttMessage () {
   delay(1000);
 }
 
-void CloseTCPConnection () {
+void CloseTCPConnection (){
   GSMSrl.println(F("AT+CIPCLOSE"));
-  //Serial.println(F("AT+CIPCLOSE"));
+  Serial.println(F("AT+CIPCLOSE"));
   delay(1000);
-}
-
-void GPRSread () {
-  if (GSMSrl.available()) {
-    while (GSMSrl.available() > 0) {
-      data2 = (char)GSMSrl.read();
-      Serial.write(data2);
-      ATComRsp += char(data2);
-    }
-    Serial.println(ATComRsp);
-    delay(200);
-  }
-  ATComRsp = "";
-  GSMSrl.flush();
-  Serial.flush();
 }
